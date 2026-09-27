@@ -1,0 +1,869 @@
+{
+  "name": "IA-TALLER-2",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        -624
+      ],
+      "id": "11c93c23-4c6e-4b6f-aec6-2f4376f12b9c",
+      "name": "Telegram Trigger",
+      "webhookId": "26b78607-fdb8-455b-8c17-443bd041bc07",
+      "credentials": {
+        "telegramApi": {
+          "id": "jcywLIRudgAb5qey",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://date.nager.at/api/v3/PublicHolidays/{{ $('Code in JavaScript').item.json.fechaIso.split('-')[0] }}/EC",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        -528
+      ],
+      "id": "92243166-790e-4e38-b51c-9b1a6488646b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// La respuesta de la API es un arreglo de feriados\nconst feriados = $input.first().json || []; \n\n// Recuperamos los datos originales (nombre, servicio, fecha) de nuestro primer nodo Code\nconst datosReserva = $('Code in JavaScript').item.json;\n\n// Buscamos si la fechaCorta coincide con alguna fecha de la API\nconst esFeriado = feriados.date === datosReserva.fechaCorta;\n\n// Devolvemos todos los datos de la reserva más el resultado de la validación\nreturn [{\n  json: {\n    ...datosReserva,\n    esFeriado: esFeriado\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -528
+      ],
+      "id": "251295d6-627d-4ece-a4c3-f282a8d214ec",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "08fa56f1-fe53-4936-888a-271d5baf9d92",
+              "leftValue": "={{ $json.esFeriado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1104,
+        -432
+      ],
+      "id": "9c37dac9-c138-4a2c-9f14-fdb139d4d6c7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "1293951433",
+        "text": "Lo sentimos, la fecha solicitada es un día feriado. Por favor, elige otra.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        -528
+      ],
+      "id": "207bde31-a0ee-4254-a176-46a83cd3fd8a",
+      "name": "Send a text message",
+      "webhookId": "ddd563f4-21ac-42ad-9a50-efe2b3afb166",
+      "credentials": {
+        "telegramApi": {
+          "id": "jcywLIRudgAb5qey",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "3d349efc-0301-8008-9ede-e194c112b123",
+          "mode": "list",
+          "cachedResultName": "Citas",
+          "cachedResultUrl": "https://app.notion.com/p/3d349efc030180089edee194c112b123"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Nombre|title",
+              "title": "={{ $('Code in JavaScript1').item.json.nombre }}"
+            },
+            {
+              "key": "Servicio|rich_text",
+              "textContent": "={{ $('Code in JavaScript1').item.json.servicio }}"
+            },
+            {
+              "key": "Fecha cita|date",
+              "date": "={{ $('Code in JavaScript').item.json.fechaIso }}"
+            },
+            {
+              "key": "Url|url",
+              "urlValue": "={{ $('Upload file').item.json.webViewLink }}"
+            },
+            {
+              "key": "Chat_ID|number",
+              "numberValue": "={{ $('Telegram Trigger').item.json.message.from.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        2448,
+        -432
+      ],
+      "id": "464e1cf4-4eb7-44d8-bb32-a1d89f087a5a",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "mks7LndXlAxQGipB",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "136b6cfc-b62c-4cf0-b61c-1d1a63704a66",
+              "leftValue": "={{ $json.datos_completos }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -16,
+        -624
+      ],
+      "id": "548126fb-dca6-4745-b1da-cd7b976ed4c1",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "chatId": "1293951433",
+        "text": "={{ $json.mensaje }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        -720
+      ],
+      "id": "1dbbd51a-01cc-4fe7-8984-061ecfea22dd",
+      "name": "Send a text message3",
+      "webhookId": "0ad27e1c-1b65-4a65-b94f-9d409be2dbcf",
+      "credentials": {
+        "telegramApi": {
+          "id": "jcywLIRudgAb5qey",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres el asistente virtual de reservas. Tu trabajo es recolectar el nombre del cliente, el servicio que desea y la fecha/hora de su cita.\nActúa de forma amable y profesional.\n\nINFORMACIÓN VITAL DE TIEMPO:\nLa fecha y hora actual es: {{ $now.setZone('America/Guayaquil').toFormat('yyyy-MM-dd HH:mm') }} (Hora de Ecuador). \nUsa esta fecha como referencia absoluta si el usuario dice \"mañana\", \"el martes\", \"a las 3pm\", etc.\n\nREGLAS:\n1. Si el usuario no te da su nombre, servicio o fecha/hora, pregúntale amablemente por los datos faltantes.\n2. El horario de atención es de 09:00 a 18:00, de lunes a viernes. Si pide fuera de este horario, infórmale y pide otra hora.\nIMPORTANTE: TU RESPUESTA DEBE SER ÚNICA Y ESTRICTAMENTE UN OBJETO JSON VÁLIDO. agrega un saludos y explicacion de los datos que faltan después del JSON.\nUsa exactamente esta estructura:\n{\n  \"nombre\": \"nombre del cliente (o null si no lo ha dado)\",\n  \"servicio\": \"servicio solicitado (o null si no lo ha dado)\",\n  \"fechaIso\": \"fecha en formato ISO (utiliza la informacion vital del tiempo que esta arriba commo referencia)\",\n  \"datos_completos\": true (si tienes los 3 datos) o false (si falta alguno),\n  \"mensaje\":\"Mensaje del dato faltante\"\n}\nIMPORTANTE SI LA INFORMACION ESTA COMPLETA RESPONDE UNICAMNETE EN JSON DE ESTA MANERA:\n{\n  \"nombre\": \"nombre del cliente (o null si no lo ha dado)\",\n  \"servicio\": \"servicio solicitado (o null si no lo ha dado)\",\n  \"fechaIso\": \"fecha en formato ISO (utiliza la informacion vital del tiempo que esta arriba commo referencia)\",\n  \"datos_completos\": true (si tienes los 3 datos) o false (si falta alguno)\n}\n\nESTE ES EL MENSAJE DEL USUARIO:\n{{ $json.message.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -592,
+        -624
+      ],
+      "id": "b782f2c4-82c5-446c-b0ad-36c6431afd28",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.update_id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -464,
+        -400
+      ],
+      "id": "57535eac-9da7-4737-8474-78780892e48c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        -400
+      ],
+      "id": "3da85fb8-15ad-42b9-ac6f-389c5490de6c",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "zzwkg1xgDjAF0fM5",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Capturamos la respuesta de texto del AI Agent\nconst textoIA = $input.first().json.output;\n\n// Lo convertimos en un objeto JSON real para n8n\nconst datosReserva = JSON.parse(textoIA);\n\nreturn {\n  json: datosReserva\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -624
+      ],
+      "id": "cb272258-5140-436e-839b-177ce84c9743",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #2c3e50; }\n    .header { text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 20px; margin-bottom: 30px; }\n    .logo { max-width: 120px; margin-bottom: 15px; }\n    h1 { margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 1px; }\n    .content { line-height: 1.6; font-size: 14px; }\n    .details { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border: 1px solid #e9ecef; }\n    .details p { margin: 8px 0; }\n    .terms { font-size: 11px; color: #7f8c8d; margin-top: 40px; border-top: 1px solid #bdc3c7; padding-top: 15px; text-align: justify; }\n  </style>\n</head>\n<body>\n  <div class=\"header\">\n    <!-- Reemplaza el src con el link directo a tu propio logo -->\n    <img class=\"logo\" src=\"https://cdn-icons-png.flaticon.com/512/3242/3242120.png\" alt=\"Logo\">\n    <h1>Contrato de Reserva</h1>\n  </div>\n\n  <div class=\"content\">\n    <p>Este documento certifica la formalización de la reserva de servicio. A continuación, se detallan los parámetros del acuerdo establecido:</p>\n\n    <div class=\"details\">\n      <p><strong>Titular de la Reserva:</strong> {{ $('Code in JavaScript1').item.json.nombre }}</p>\n      <p><strong>Servicio Solicitado:</strong> {{ $('Code in JavaScript1').item.json.servicio }}</p>\n      <p><strong>Fecha y Hora:</strong> {{ $('Code in JavaScript1').item.json.fechaIso }}</p>\n    </div>\n\n    <div class=\"terms\">\n      <strong>Términos y Condiciones de Servicio:</strong><br>\n      1. El cliente se compromete a presentarse puntualmente en la fecha y hora indicadas.<br>\n      2. Cualquier solicitud de reprogramación o cancelación deberá notificarse con un mínimo de 24 horas de antelación.<br>\n      3. La emisión de este comprobante garantiza el bloqueo del horario en nuestra base de datos.\n    </div>\n  </div>\n</body>\n</html>>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1328,
+        -336
+      ],
+      "id": "6741114d-e615-40b1-8289-2c85334b58cc",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "index.html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1552,
+        -336
+      ],
+      "id": "79cf514b-bd2d-4039-8a74-3605287f7c67",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:4000/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1776,
+        -336
+      ],
+      "id": "6ecc07b7-c453-4fbf-8282-8218e0ad794c",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "name": "=Contrato_{{$('Code in JavaScript').item.json.nombre}}.pdf",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1xa6bau1obe1LUX14gll5CibwhoE9sTtA",
+          "mode": "list",
+          "cachedResultName": "IA-PROYECTO-FINAL",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1xa6bau1obe1LUX14gll5CibwhoE9sTtA"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2000,
+        -432
+      ],
+      "id": "49cc4268-3c35-401d-9a62-156115a27144",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ssOcsNOUo8YdxK3e",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "share",
+        "folderNoRootId": {
+          "__rl": true,
+          "value": "1xa6bau1obe1LUX14gll5CibwhoE9sTtA",
+          "mode": "list",
+          "cachedResultName": "IA-PROYECTO-FINAL",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1xa6bau1obe1LUX14gll5CibwhoE9sTtA"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2224,
+        -432
+      ],
+      "id": "de8a9bf9-ac26-4160-8dd5-f3d7f8f94814",
+      "name": "Share folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ssOcsNOUo8YdxK3e",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "1293951433",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "=¡Reserva confirmada, {{ $('Code in JavaScript').item.json.nombre }}! 🎉 Aquí tienes el contrato formal de tu cita. Puedes revisarlo en cualquier momento.",
+          "fileName": "=Contrato_{{$('Code in JavaScript').item.json.nombre}}.pdf"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2000,
+        -240
+      ],
+      "id": "6623e374-194a-463a-bc8a-62a56ae69266",
+      "name": "Send a document",
+      "webhookId": "074b3e0d-e06a-4f79-ac2e-e0a1c16dd733",
+      "credentials": {
+        "telegramApi": {
+          "id": "jcywLIRudgAb5qey",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "3d349efc-0301-8008-9ede-e194c112b123",
+          "mode": "list",
+          "cachedResultName": "Citas",
+          "cachedResultUrl": "https://app.notion.com/p/3d349efc030180089edee194c112b123"
+        },
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Fecha cita|date",
+              "condition": "equals",
+              "date": "={{ $('Code in JavaScript').item.json.fechaIso }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        -528
+      ],
+      "id": "8ce5b23f-53e9-4c15-b5ad-3c4597ae9469",
+      "name": "Get many database pages",
+      "alwaysOutputData": true,
+      "credentials": {
+        "notionApi": {
+          "id": "mks7LndXlAxQGipB",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "56852cca-f797-4265-b5f3-6dfbd040e4d8",
+              "leftValue": "={{ $json.property_fecha_cita.start }}",
+              "rightValue": "={{ $('Code in JavaScript1').item.json.fechaIso }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        -528
+      ],
+      "id": "bb00e198-ce6b-48a2-8015-b506713cfb2a",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "chatId": "1293951433",
+        "text": "=Lo siento {{ $('Code in JavaScript').item.json.nombre }}, el horario de las {{ $('Code in JavaScript').item.json.fechaIso }} ya se encuentra ocupado. ¿Podrías intentar con otra hora?",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1104,
+        -624
+      ],
+      "id": "1b86664f-51d2-452d-b674-ab16cab09f41",
+      "name": "Send a text message1",
+      "webhookId": "d718b67a-a465-45e1-bbf6-97a118f1aa19",
+      "credentials": {
+        "telegramApi": {
+          "id": "jcywLIRudgAb5qey",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        1696,
+        -736
+      ],
+      "id": "480c9c11-9406-4431-9ed3-e4f9579eb15c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.property_chat_id }}",
+        "text": "=¡Buenos días, {{ $json.name }}! ☀️ Te recordamos que tienes una cita confirmada para tu servicio de {{ $json.property_servicio}}. ¡Te esperamos!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        -736
+      ],
+      "id": "90b9290e-0bc9-4310-8e28-4d69d9a0351b",
+      "name": "Send a text message2",
+      "webhookId": "177fd4f7-5230-43af-8044-4f83accb670a",
+      "credentials": {
+        "telegramApi": {
+          "id": "jcywLIRudgAb5qey",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "3d349efc-0301-8008-9ede-e194c112b123",
+          "mode": "list",
+          "cachedResultName": "Citas",
+          "cachedResultUrl": "https://app.notion.com/p/3d349efc030180089edee194c112b123"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "key": "Fecha cita|date",
+              "condition": "on_or_after",
+              "date": "={{ $now.startOf('day').toISO() }}"
+            },
+            {
+              "key": "Fecha cita|date",
+              "condition": "on_or_before",
+              "date": "={{ $now.endOf('day').toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        -736
+      ],
+      "id": "a917c2d1-4230-4ad7-89a6-9c8e6652b130",
+      "name": "Get many database pages1",
+      "credentials": {
+        "notionApi": {
+          "id": "mks7LndXlAxQGipB",
+          "name": "Notion account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Get many database pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        []
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Share folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share folder": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a document": {
+      "main": [
+        []
+      ]
+    },
+    "Get many database pages": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many database pages1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many database pages1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "59d95f5d-9f0a-446d-88ab-ad4ffbe92833",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a6e76dc2bb6d851e81cc352abf346656a81185ba658c6b223979a943f137fee8"
+  },
+  "id": "WIyDzVuSBBtN55CX",
+  "tags": []
+}

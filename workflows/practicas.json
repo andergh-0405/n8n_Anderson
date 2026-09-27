@@ -1,0 +1,166 @@
+{
+  "name": "Google Form to Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Registro de Nuevo Cliente",
+        "formDescription": "Por favor complete sus datos para ser contactado por uno de nuestros asesores",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nombre Completo",
+              "fieldName": "nombre",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Teléfono (con código de país)",
+              "fieldName": "telefono",
+              "placeholder": "+52 1234567890",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "fieldName": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Mensaje",
+              "fieldType": "textarea",
+              "fieldName": "mensaje",
+              "placeholder": "¿En qué podemos ayudarle?"
+            }
+          ]
+        },
+        "options": {
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "¡Gracias! Hemos recibido su información. Un asesor se pondrá en contacto pronto."
+            }
+          }
+        }
+      },
+      "id": "99a12de9-9a55-4cb1-9d1b-3dd4092ee36f",
+      "name": "Formulario de Contacto",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        256,
+        272
+      ],
+      "webhookId": "a5ff2966-955a-4c6c-a90a-834d6fa8e50d"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lista de asesores disponibles\nconst asesores = [\n  { id:'1',nombre: 'María González', whatsapp: '+5215511111111' },\n  { id:'2',nombre: 'Carlos Rodríguez', whatsapp: '+5215522222222' },\n  { id:'3',nombre: 'Ana Martínez', whatsapp: '+5215533333333' },\n  { id:'4',nombre: 'Luis Hernández', whatsapp: '+5215544444444' }\n];\n\n// Asignación rotativa basada en timestamp\nconst timestamp = new Date().getTime();\nconst index = timestamp % asesores.length;\nconst asesorAsignado = asesores[index];\n\n// Agregar el asesor asignado a cada item\nreturn $input.all().map(item => ({\n  ...item.json,\n  asesor_id: asesorAsignado.id,\n  asesor_nombre: asesorAsignado.nombre,\n  asesor_whatsapp: asesorAsignado.whatsapp\n}));\n"
+      },
+      "id": "dcb9dd84-1aef-44d6-891f-8f382645eb60",
+      "name": "Asignar Asesor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "email": "={{ $json.email }}",
+        "additionalFields": {
+          "firstName": "={{ $json.nombre.split(\" \")[0] }}",
+          "lastName": "={{ $json.nombre.split(\" \").slice(1).join(\" \") }}",
+          "message": "={{ $json.mensaje }}",
+          "phoneNumber": "={{ $json.telefono }}"
+        },
+        "options": {}
+      },
+      "id": "29f1c74d-5336-4604-a946-4867b001b454",
+      "name": "Crear Contacto en HubSpot",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        272
+      ],
+      "credentials": {
+        "hubspotOAuth2Api": {
+          "id": "OzXLfeVqEOUqRxVY",
+          "name": "HubSpot OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1293951433",
+        "text": "=Hola ,{{ $json.properties.firstname.value }} tu asesor asignado es {{ $json.asesor_nombre }} .  Él se pondrá en contacto contigo para ayudarte.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        128
+      ],
+      "id": "3808422f-45ef-4f8a-a718-d9485e13082a",
+      "name": "Send a text message",
+      "webhookId": "95eaf082-4497-4f5b-9b0c-45cd9a2b1761",
+      "credentials": {
+        "telegramApi": {
+          "id": "Hxo0hKLMZCoF1wzG",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Formulario de Contacto": {
+      "main": [
+        [
+          {
+            "node": "Crear Contacto en HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Asignar Asesor": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Contacto en HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Asignar Asesor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}
