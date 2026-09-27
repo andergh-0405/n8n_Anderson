@@ -1,3 +1,11 @@
-/node_modules
-/package-lock.json
-/credenciales_inmobiliaria.json
+# Dependencias
+node_modules/
+
+# Variables de entorno
+.env
+
+# Credenciales
+credenciales*.json
+
+# Logs
+*.log
